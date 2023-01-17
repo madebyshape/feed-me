@@ -39,49 +39,28 @@ class GoogleSheet extends DataType implements DataTypeInterface
             return ['success' => false, 'error' => $error];
         }
 
-        $data = $response['data'];
-
-        $array = [
-            'entry' => []
-        ];
-
         try {
 
+            $data = $response['data'];
             $content = JsonHelper::decode($data, true);
+
+            $array = [
+                'entry' => [
+                    'rows' => []
+                ]
+            ];
 
             $headers = array_shift($content['values']);
 
-            if (count($headers) == 1) {
+            $rows = $content['values'];
 
-                $headerGroup = $headers[0];
+            foreach ($rows as $i => $row) {
+                foreach ($row as $j => $column) {
 
-                $array['entry'][$headerGroup] = [];
+                    $key = $headers[$j];
+                    $array['entry']['rows'][$i][$key] = $column;
 
-                $secondaryHeaders = array_shift($content['values']);
-
-                $rows = $content['values'];
-
-                foreach ($rows as $i => $row) {
-                    foreach ($row as $j => $column) {
-
-                        $key = $secondaryHeaders[$j];
-                        $array['entry'][$headerGroup][$i][$key] = $column;
-                    }
                 }
-                
-            }
-            else {
-
-                $rows = $content['values'];
-
-                foreach ($rows as $i => $row) {
-                    foreach ($row as $j => $column) {
-                        $key = $headers[$j];
-    
-                        $array[$i][$key] = $column;
-                    }
-                }
-
             }
             
             
