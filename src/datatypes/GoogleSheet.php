@@ -41,21 +41,50 @@ class GoogleSheet extends DataType implements DataTypeInterface
 
         $data = $response['data'];
 
+        $array = [
+            'entry' => []
+        ];
+
         try {
+
             $content = JsonHelper::decode($data, true);
 
             $headers = array_shift($content['values']);
-            $rows = $content['values'];
 
-            $array = [];
+            if (count($headers) == 1) {
 
-            foreach ($rows as $i => $row) {
-                foreach ($row as $j => $column) {
-                    $key = $headers[$j];
+                $headerGroup = $headers[0];
 
-                    $array[$i][$key] = $column;
+                $array['entry'][$headerGroup] = [];
+
+                $secondaryHeaders = array_shift($content['values']);
+
+                $rows = $content['values'];
+
+                foreach ($rows as $i => $row) {
+                    foreach ($row as $j => $column) {
+
+                        $key = $secondaryHeaders[$j];
+                        $array['entry'][$headerGroup][$i][$key] = $column;
+                    }
                 }
+                
             }
+            else {
+
+                $rows = $content['values'];
+
+                foreach ($rows as $i => $row) {
+                    foreach ($row as $j => $column) {
+                        $key = $headers[$j];
+    
+                        $array[$i][$key] = $column;
+                    }
+                }
+
+            }
+            
+            
         } catch (\Exception $e) {
             $error = 'Invalid data: ' . $e->getMessage();
 
@@ -73,6 +102,8 @@ class GoogleSheet extends DataType implements DataTypeInterface
 
             return ['success' => false, 'error' => $error];
         }
+
+        // Plugin::info(print_r($array, true));
 
         // Look for and return only the items for primary element
         $primaryElement = Hash::get($settings, 'primaryElement');
